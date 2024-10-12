@@ -1,6 +1,7 @@
 from hyperon import MeTTa, SymbolAtom, ExpressionAtom, GroundedAtom
 import os
 import glob
+import json
 
 metta = MeTTa()
 metta.run(f"!(bind! &space (new-space))")
@@ -31,18 +32,44 @@ except Exception as e:
 # 2 Points
 def get_transcript(node):
      #TODO Implement the logic to fetch the transcript
-    transcript = metta.run()
-    return transcript     
+     print("------------ get transcript")
+     transcript = metta.run(f'''
+!(match &space (transcribed_to ({node[0]}) $x) (transcribed_to ({node[0]}) $x))
+''')
+     return transcript[0]     
 
 #2 Points
 def get_protein(node):
+    print("------------get protein--------------")
     #TODO Implement the logic to fetch the protein
-    protein = metta.run() 
-    return protein
+    protein = metta.run(f'''
+;!({node[0]})
+!(match &space (
+    , (transcribed_to ({node[0]}) $x)
+        (translates_to $x $y))
+        (translates_to $x $y)
+)
+''') 
+    return protein[0]
 
+# def get_edge(first) : 
+#     edge = metta.run(f'''
+# ;!({first})
+# !(let $x (car-atom {first}) (car-atom $x))
+# ''')
+#     res = str(edge[0][0])
+#     return res
 #6 Points
 def metta_seralizer(metta_result):
-    #TODO Implement logic to convert the Metta output into a structured format  (e.g., a list of dictionaries) that can be easily serialized to JSON.
+    print("-----------Serializer-----------")
+    result = []
+    for n in metta_result:
+        # print(n)
+        # c = ExpressionAtom.get_children(n)
+        children = ExpressionAtom.get_children(n)
+        # print(children)
+        result.append({'edge':children[0],"source":children[1],"target":children[2]})      
+    # print(result)
     return result
 
 
@@ -64,8 +91,10 @@ Expected Output Format::
 """
 
 #3
-parsed_result = metta_seralizer(transcript_result)
+parsed_result = metta_seralizer(protein_result)
+parsed_result1 = metta_seralizer(transcript_result)
 print(parsed_result) 
+print(parsed_result1) 
 """
 Expected Output Format:
 [
